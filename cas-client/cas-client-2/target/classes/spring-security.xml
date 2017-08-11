@@ -1,0 +1,60 @@
+<b:beans xmlns="http://www.springframework.org/schema/security"
+             xmlns:b="http://www.springframework.org/schema/beans"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/security
+		http://www.springframework.org/schema/security/spring-security.xsd">
+
+
+
+    <http entry-point-ref="casEntryPoint">
+        <intercept-url pattern="/**" access="hasRole('USER')" />
+        <custom-filter position="CAS_FILTER" ref="casFilter" />
+    </http>
+
+
+    <!-- 设置回调参数-->
+    <b:bean id="serviceProperties"
+          class="org.springframework.security.cas.ServiceProperties">
+        <b:property name="service"  value="http://localhost:9002/cas-client-2/login/cas"/>
+        <b:property name="sendRenew" value="false"/>
+    </b:bean>
+
+    <b:bean id="casFilter" class="org.springframework.security.cas.web.CasAuthenticationFilter">
+        <b:property name="authenticationManager" ref="authenticationManager"/>
+    </b:bean>
+
+    <b:bean id="casEntryPoint" class="org.springframework.security.cas.web.CasAuthenticationEntryPoint">
+        <b:property name="loginUrl" value="http://localhost:8080/cas/login"/>
+        <b:property name="serviceProperties" ref="serviceProperties"/>
+    </b:bean>
+
+
+
+    <!-- 认证管理器 -->
+    <authentication-manager alias="authenticationManager">
+        <authentication-provider ref="casAuthenticationProvider" />
+    </authentication-manager>
+
+    <b:bean id="casAuthenticationProvider"
+          class="org.springframework.security.cas.authentication.CasAuthenticationProvider">
+        <b:property name="authenticationUserDetailsService">
+            <b:bean class="org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper">
+                <b:constructor-arg ref="userService" />
+            </b:bean>
+        </b:property>
+        <b:property name="serviceProperties" ref="serviceProperties" />
+        <b:property name="ticketValidator">
+            <b:bean class="org.jasig.cas.client.validation.Cas20ServiceTicketValidator">
+                <b:constructor-arg index="0" value="http://localhost:8080/cas" />
+            </b:bean>
+        </b:property>
+        <b:property name="key" value="an_id_for_this_auth_provider_only"/>
+    </b:bean>
+
+    <user-service id="userService">
+        <user name="admin" password="111111" authorities="ROLE_USER" />
+    </user-service>
+
+</b:beans>
