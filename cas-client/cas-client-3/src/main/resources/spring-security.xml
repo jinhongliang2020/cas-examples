@@ -1,0 +1,119 @@
+<b:beans xmlns="http://www.springframework.org/schema/security"
+             xmlns:b="http://www.springframework.org/schema/beans"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/security
+		http://www.springframework.org/schema/security/spring-security.xsd">
+
+
+
+    <http entry-point-ref="casEntryPoint">
+        <intercept-url pattern="/**" access="hasRole('USER')" />
+        <custom-filter position="CAS_FILTER" ref="casFilter" />
+
+        <!-- 退出登录配置项 -->
+        <logout logout-success-url="/anon/logout" />
+        <custom-filter ref="requestSingleLogoutFilter" before="LOGOUT_FILTER"/>
+        <custom-filter ref="singleLogoutFilter" before="CAS_FILTER"/>
+        <!--
+        如果不设置为true,
+        <logout logout-success-url="/anon/logout" />
+        logout只支持post
+        -->
+        <csrf disabled="true"/>
+    </http>
+
+
+    <!-- 设置回调参数-->
+    <b:bean id="serviceProperties"
+          class="org.springframework.security.cas.ServiceProperties">
+        <b:property name="service"  value="http://localhost:9002/cas-client-3/login/cas"/>
+        <b:property name="sendRenew" value="false"/>
+
+        <b:property name="authenticateAllArtifacts" value="true"/>
+    </b:bean>
+
+    <b:bean id="casFilter" class="org.springframework.security.cas.web.CasAuthenticationFilter">
+        <b:property name="authenticationManager" ref="authenticationManager"/>
+
+        <b:property name="serviceProperties" ref="serviceProperties"/>
+        <b:property name="authenticationDetailsSource">
+            <b:bean class="org.springframework.security.cas.web.authentication.ServiceAuthenticationDetailsSource">
+                <b:constructor-arg ref="serviceProperties"/>
+            </b:bean>
+        </b:property>
+    </b:bean>
+
+    <b:bean id="casEntryPoint" class="org.springframework.security.cas.web.CasAuthenticationEntryPoint">
+        <b:property name="loginUrl" value="http://localhost:8080/cas/login"/>
+        <b:property name="serviceProperties" ref="serviceProperties"/>
+    </b:bean>
+
+
+
+    <!-- 认证管理器 -->
+    <authentication-manager alias="authenticationManager">
+        <authentication-provider ref="casAuthenticationProvider" />
+    </authentication-manager>
+
+    <b:bean id="casAuthenticationProvider"
+          class="org.springframework.security.cas.authentication.CasAuthenticationProvider">
+        <b:property name="authenticationUserDetailsService">
+            <b:bean class="org.springframework.security.core.userdetails.UserDetailsByNameServiceWrapper">
+                <b:constructor-arg ref="userService" />
+            </b:bean>
+        </b:property>
+        <b:property name="serviceProperties" ref="serviceProperties" />
+       <!-- <b:property name="ticketValidator">
+            <b:bean class="org.jasig.cas.client.validation.Cas20ServiceTicketValidator">
+                <b:constructor-arg index="0" value="http://localhost:8080/cas" />
+            </b:bean>
+        </b:property>-->
+
+        <b:property name="ticketValidator">
+            <b:bean class="org.jasig.cas.client.validation.Cas20ProxyTicketValidator">
+                <b:constructor-arg value="http://localhost:8080/cas"/>
+                <b:property name="acceptAnyProxy" value="true"/>
+            </b:bean>
+        </b:property>
+        <b:property name="statelessTicketCache">
+            <b:bean class="org.springframework.security.cas.authentication.EhCacheBasedTicketCache">
+                <b:property name="cache">
+                    <b:bean class="net.sf.ehcache.Cache"
+                          init-method="initialise" destroy-method="dispose">
+                        <b:constructor-arg value="casTickets"/>
+                        <b:constructor-arg value="50"/>
+                        <b:constructor-arg value="true"/>
+                        <b:constructor-arg value="false"/>
+                        <b:constructor-arg value="3600"/>
+                        <b:constructor-arg value="900"/>
+                        <b:property name="cacheManager">
+                            <b:bean class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean"/>
+                        </b:property>
+                    </b:bean>
+                </b:property>
+            </b:bean>
+        </b:property>
+        <b:property name="key" value="an_id_for_this_auth_provider_only"/>
+    </b:bean>
+
+    <user-service id="userService">
+        <user name="admin" password="111111" authorities="ROLE_USER" />
+    </user-service>
+
+
+    <!-- 配置退出登录拦截器具体实现类. -->
+    <!-- This filter handles a Single Logout Request from the CAS Server -->
+    <b:bean id="singleLogoutFilter" class="org.jasig.cas.client.session.SingleSignOutFilter"/>
+
+    <!-- This filter redirects to the CAS Server to signal Single Logout should be performed -->
+    <b:bean id="requestSingleLogoutFilter"
+            class="org.springframework.security.web.authentication.logout.LogoutFilter">
+        <b:constructor-arg value="http://localhost:8080/cas/logout"/>
+        <b:constructor-arg>
+            <b:bean class="org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler"/>
+        </b:constructor-arg>
+        <b:property name="filterProcessesUrl" value="/logout/cas"/>
+    </b:bean>
+</b:beans>

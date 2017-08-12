@@ -11,8 +11,8 @@
     <modules>
         <module>cas-client-1</module>
         <module>cas-client-2</module>
+        <module>cas-client-3</module>
     </modules>
-
 
 
     <properties>

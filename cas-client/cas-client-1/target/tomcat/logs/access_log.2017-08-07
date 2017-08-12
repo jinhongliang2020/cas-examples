@@ -1,4 +1,0 @@
-127.0.0.1 - - [07/Aug/2017:21:31:12 +0800] "GET /cas-client-1/login/cas?ticket=ST-4-ObpYwbG2Dc4JOrQVv5ff-cas01.example.org HTTP/1.1" 302 - http-bio-9000-exec-1 187
-127.0.0.1 - - [07/Aug/2017:21:31:12 +0800] "GET /cas-client-1/ HTTP/1.1" 200 52 http-bio-9000-exec-3 614
-127.0.0.1 - - [07/Aug/2017:21:31:17 +0800] "GET /cas-client-1/ HTTP/1.1" 200 52 http-bio-9000-exec-4 2
-127.0.0.1 - - [07/Aug/2017:21:44:41 +0800] "GET /cas-client-1/ HTTP/1.1" 200 52 http-bio-9000-exec-6 4

@@ -5,7 +5,8 @@
   "id" : 10000001,
   "description" : "This service definition authorized all application urls that support HTTPS and IMAPS protocols.",
   "proxyPolicy" : {
-    "@class" : "org.jasig.cas.services.RefuseRegisteredServiceProxyPolicy"
+    "@class" : "org.jasig.cas.services.RegexMatchingRegisteredServiceProxyPolicy",
+    "pattern" : "^(https|http)://.+"
   },
   "evaluationOrder" : 0,
   "usernameAttributeProvider" : {
